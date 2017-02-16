@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jube>
+  <benchmark name="bench" outpath="/scratch/js947/lem">
+    <comment>cb-geo/lem</comment>
+
+    <parameterset name="base">
+      <parameter name="setup">cpu,gpu</parameter>
+      <parameter name="case">uniaxial_tension_test_50,fracture_200,fracture_500</parameter>
+    </parameterset>
+
+    <parameterset name="cpu">
+      <parameter name="account">support</parameter>
+      <parameter name="partition">biocloud-normal</parameter>
+      <parameter name="solver">CG_Eigen,CG_MKL</parameter>
+      <parameter name="module">lem@develop/gcc@6.3.0-lthgxcz</parameter>
+    </parameterset>
+    <parameterset name="gpu">
+      <parameter name="account">support-gpu</parameter>
+      <parameter name="partition">tesla</parameter>
+      <parameter name="solver">CG_GPU</parameter>
+      <parameter name="module">lem@develop/gcc@6.3.0-sf6mcyh</parameter>
+    </parameterset>
+
+    <fileset name="files">
+      <copy>bench.sh</copy>
+    </fileset>
+
+    <substituteset name="prepare_job">
+      <iofile in="bench.sh" out="job.sh"/>
+      <sub source="LEM_MODULE" dest="${module}"/>
+      <sub source="TESTCASE" dest="${case}"/>
+      <sub source="SOLVER" dest="${solver}"/>
+    </substituteset>
+
+    <step name="submit_job">
+      <use>base</use>
+      <use>${setup}</use>
+      <use>files</use>
+      <use>prepare_job</use>
+      <do done_file="done">sbatch -A${account} -p${partition} -N1 --exclusive -t00:20:00 job.sh</do>
+    </step>
+
+    <patternset name="walltime">
+      <pattern name="time_total" type="float">time: $jube_pat_fp</pattern>
+      <pattern name="time_solver" type="float"> Solver: $jube_pat_fp ms</pattern>
+      <pattern name="time_assemble" type="float"> Assemble matrices: $jube_pat_fp ms</pattern>
+      <pattern name="time_break" type="float"> Break lattices: $jube_pat_fp ms</pattern>
+    </patternset>
+
+    <analyser name="times">
+      <use>walltime</use>
+      <analyse step="submit_job">
+        <file>err</file>
+      </analyse>
+    </analyser>
+
+    <result>
+      <use>times</use>
+      <table name="walltime" style="pretty">
+        <column>case</column>
+        <column>solver</column>
+        <column>time_total</column>
+      </table>
+      <table name="solver time" style="pretty">
+        <column>case</column>
+        <column>solver</column>
+        <column title="average">time_solver_avg</column>
+        <column title="min"    >time_solver_min</column>
+        <column title="max"    >time_solver_max</column>
+      </table>
+      <table name="assembly time" style="pretty">
+        <column>case</column>
+        <column>solver</column>
+        <column title="average">time_assemble_avg</column>
+        <column title="min"    >time_assemble_min</column>
+        <column title="max"    >time_assemble_max</column>
+        <column title="first"  >time_assemble</column>
+      </table>
+      <table name="break lattices time" style="pretty">
+        <column>case</column>
+        <column>solver</column>
+        <column title="average">time_break_avg</column>
+        <column title="min"    >time_break_min</column>
+        <column title="max"    >time_break_max</column>
+        <column title="first"  >time_break</column>
+      </table>
+    </result>
+  </benchmark>
+</jube>
