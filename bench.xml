@@ -5,20 +5,20 @@
 
     <parameterset name="base">
       <parameter name="setup">cpu,gpu</parameter>
-      <parameter name="case">uniaxial_tension_test_50,fracture_200,fracture_500</parameter>
+      <parameter name="case">uniaxial_tension_test_50,fracture_200,fracture_500,notch/medium_resolution,notch/fine_resolution</parameter>
     </parameterset>
 
     <parameterset name="cpu">
       <parameter name="account">support</parameter>
       <parameter name="partition">biocloud-normal</parameter>
-      <parameter name="solver">CG_Eigen,CG_MKL</parameter>
-      <parameter name="module">lem@develop/gcc@6.3.0-lthgxcz</parameter>
+      <parameter name="solver">CG_MKL</parameter>
+      <parameter name="module">lem/develop/gcc@6.3.0-66c47pt</parameter>
     </parameterset>
     <parameterset name="gpu">
       <parameter name="account">support-gpu</parameter>
       <parameter name="partition">tesla</parameter>
       <parameter name="solver">CG_GPU</parameter>
-      <parameter name="module">lem@develop/gcc@6.3.0-sf6mcyh</parameter>
+      <parameter name="module">lem/develop/gcc@6.3.0-vs3x6m7</parameter>
     </parameterset>
 
     <fileset name="files">
@@ -37,7 +37,7 @@
       <use>${setup}</use>
       <use>files</use>
       <use>prepare_job</use>
-      <do done_file="done">sbatch -A${account} -p${partition} -N1 --exclusive -t00:20:00 job.sh</do>
+      <do done_file="done">sbatch -A${account} -p${partition} -N1 --exclusive -t02:00:00 job.sh</do>
     </step>
 
     <patternset name="walltime">
@@ -46,10 +46,15 @@
       <pattern name="time_assemble" type="float"> Assemble matrices: $jube_pat_fp ms</pattern>
       <pattern name="time_break" type="float"> Break lattices: $jube_pat_fp ms</pattern>
     </patternset>
+    <patternset name="counts">
+      <pattern name="step" type="int">Step: $jube_pat_int</pattern>
+    </patternset>
 
     <analyser name="times">
+      <use>counts</use>
       <use>walltime</use>
       <analyse step="submit_job">
+        <file>out</file>
         <file>err</file>
       </analyse>
     </analyser>
@@ -60,6 +65,7 @@
         <column>case</column>
         <column>solver</column>
         <column>time_total</column>
+        <column title="steps">step_max</column>
       </table>
       <table name="solver time" style="pretty">
         <column>case</column>

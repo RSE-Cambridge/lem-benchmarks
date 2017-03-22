@@ -1,4 +1,5 @@
 #!/bin/bash
+#SBATCH -J cb-geo/lem
 #SBATCH -o out
 #SBATCH -e err
 set -e
