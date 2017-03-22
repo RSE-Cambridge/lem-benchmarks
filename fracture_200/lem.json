@@ -60,7 +60,7 @@
     "tolerance" : 2.5E-03
   },
   "post_processing" : {
-    "output_steps" : 100,
+    "output_steps" : 1,
     "results_path" : "results/"
   }
 }
